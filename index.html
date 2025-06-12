@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Photoshop - Advanced Image Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #2c2c2c;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Menu Bar */
+        .menu-bar {
+            background: #3c3c3c;
+            padding: 8px 16px;
+            border-bottom: 1px solid #555;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .menu-item {
+            color: #fff;
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .menu-item:hover {
+            background: #555;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            width: 60px;
+            background: #4a4a4a;
+            border-right: 1px solid #555;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 5px;
+            gap: 8px;
+        }
+
+        .tool-btn {
+            width: 40px;
+            height: 40px;
+            background: #5a5a5a;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .tool-btn:hover {
+            background: #6a6a6a;
+            transform: translateY(-1px);
+        }
+
+        .tool-btn.active {
+            background: #007acc;
+            box-shadow: 0 0 10px rgba(0, 122, 204, 0.5);
+        }
+
+        /* Canvas Area */
+        .canvas-area {
+            flex: 1;
+            background: #383838;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: auto;
+        }
+
+        #canvas {
+            border: 1px solid #555;
+            background: #fff;
+            cursor: crosshair;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Properties Panel */
+        .properties-panel {
+            width: 280px;
+            background: #4a4a4a;
+            border-left: 1px solid #555;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-section {
+            border-bottom: 1px solid #555;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: #5a5a5a;
+            padding: 12px 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .panel-content {
+            padding: 16px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .panel-section.expanded .panel-content {
+            max-height: 500px;
+        }
+
+        /* Controls */
+        .control-group {
+            margin-bottom: 16px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .control-group input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .control-group input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            background: #5a5a5a;
+            border: 1px solid #666;
+            border-radius: 4px;
+            color: #fff;
+        }
+
+        /* Layers Panel */
+        .layers-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .layer-item {
+            background: #5a5a5a;
+            margin-bottom: 4px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .layer-item:hover {
+            background: #6a6a6a;
+        }
+
+        .layer-item.active {
+            background: #007acc;
+        }
+
+        .layer-controls {
+            display: flex;
+            gap: 4px;
+        }
+
+        .layer-btn {
+            background: #666;
+            border: none;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        /* History Panel */
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            border-bottom: 1px solid #555;
+        }
+
+        .history-item:hover {
+            background: #5a5a5a;
+        }
+
+        .history-item.current {
+            background: #007acc;
+        }
+
+        /* Filters */
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            background: #5a5a5a;
+            border: none;
+            color: #fff;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: background 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: #6a6a6a;
+        }
+
+        /* File Input */
+        .file-input {
+            display: none;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: #3c3c3c;
+            padding: 6px 16px;
+            border-top: 1px solid #555;
+            font-size: 12px;
+            color: #ccc;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .properties-panel {
+                width: 250px;
+            }
+            
+            .toolbar {
+                width: 50px;
+            }
+            
+            .tool-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Menu Bar -->
+        <div class="menu-bar">
+            <a href="#" class="menu-item" onclick="newImage()">Dosya</a>
+            <a href="#" class="menu-item" onclick="editMenu()">Düzenle</a>
+            <a href="#" class="menu-item" onclick="imageMenu()">Görüntü</a>
+            <a href="#" class="menu-item" onclick="layerMenu()">Katman</a>
+            <a href="#" class="menu-item" onclick="filterMenu()">Filtre</a>
+            <a href="#" class="menu-item" onclick="viewMenu()">Görünüm</a>
+            <input type="file" id="fileInput" class="file-input" accept="image/*" onchange="loadImage(event)">
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <button class="tool-btn active" onclick="selectTool('brush')" title="Fırça">🖌️</button>
+                <button class="tool-btn" onclick="selectTool('eraser')" title="Silgi">🧽</button>
+                <button class="tool-btn" onclick="selectTool('eyedropper')" title="Renk Seçici">💉</button>
+                <button class="tool-btn" onclick="selectTool('text')" title="Metin">📝</button>
+                <button class="tool-btn" onclick="selectTool('rectangle')" title="Dikdörtgen">⬜</button>
+                <button class="tool-btn" onclick="selectTool('circle')" title="Daire">⚪</button>
+                <button class="tool-btn" onclick="selectTool('line')" title="Çizgi">📏</button>
+                <button class="tool-btn" onclick="selectTool('move')" title="Taşı">✋</button>
+                <button class="tool-btn" onclick="selectTool('crop')" title="Kırp">✂️</button>
+                <button class="tool-btn" onclick="selectTool('blur')" title="Bulanıklaştır">🌫️</button>
+                <button class="tool-btn" onclick="selectTool('sharpen')" title="Keskinleştir">🔍</button>
+                <button class="tool-btn" onclick="selectTool('clone')" title="Kopyala">👥</button>
+            </div>
+
+            <!-- Canvas Area -->
+            <div class="canvas-area">
+                <canvas id="canvas" width="800" height="600"></canvas>
+            </div>
+
+            <!-- Properties Panel -->
+            <div class="properties-panel">
+                <!-- Brush Settings -->
+                <div class="panel-section expanded">
+                    <div class="panel-header" onclick="togglePanel(this)">
+                        Fırça Ayarları
+                    </div>
+                    <div class="panel-content">
+                        <div class="control-group">
+                            <label>Boyut: <span id="brushSizeValue">20</span>px</label>
+                            <input type="range" id="brushSize" min="1" max="100" value="20" oninput="updateBrushSize(this.value)">
+                        </div>
+                        <div class="control-group">
+                            <label>Opaklık: <span id="opacityValue">100</span>%</label>
+                            <input type="range" id="opacity" min="1" max="100" value="100" oninput="updateOpacity(this.value)">
+                        </div>
+                        <div class="control-group">
+                            <label>Renk</label>
+                            <input type="color" id="brushColor" value="#000000" onchange="updateBrushColor(this.value)">
+                        </div>
+                        <div class="control-group">
+                            <label>Yumuşaklık: <span id="hardnessValue">50</span>%</label>
+                            <input type="range" id="hardness" min="0" max="100" value="50" oninput="updateHardness(this.value)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Layers -->
+                <div class="panel-section expanded">
+                    <div class="panel-header" onclick="togglePanel(this)">
+                        Katmanlar
+                    </div>
+                    <div class="panel-content">
+                        <div class="layers-list" id="layersList">
+                            <div class="layer-item active" data-layer="0">
+                                <span>Arka Plan</span>
+                                <div class="layer-controls">
+                                    <button class="layer-btn" onclick="toggleLayerVisibility(0)">👁️</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="filter-btn" style="width: 100%; margin-top: 8px;" onclick="addLayer()">Yeni Katman</button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="panel-section">
+                    <div class="panel-header" onclick="togglePanel(this)">
+                        Filtreler
+                    </div>
+                    <div class="panel-content">
+                        <div class="filter-grid">
+                            <button class="filter-btn" onclick="applyFilter('blur')">Bulanık</button>
+                            <button class="filter-btn" onclick="applyFilter('sharpen')">Keskin</button>
+                            <button class="filter-btn" onclick="applyFilter('emboss')">Kabartma</button>
+                            <button class="filter-btn" onclick="applyFilter('edge')">Kenar</button>
+                            <button class="filter-btn" onclick="applyFilter('invert')">Negatif</button>
+                            <button class="filter-btn" onclick="applyFilter('grayscale')">Gri Ton</button>
+                            <button class="filter-btn" onclick="applyFilter('sepia')">Sepia</button>
+                            <button class="filter-btn" onclick="applyFilter('vintage')">Vintage</button>
+                        </div>
+                        <div class="control-group">
+                            <label>Parlaklık: <span id="brightnessValue">0</span></label>
+                            <input type="range" id="brightness" min="-100" max="100" value="0" oninput="adjustBrightness(this.value)">
+                        </div>
+                        <div class="control-group">
+                            <label>Kontrast: <span id="contrastValue">0</span></label>
+                            <input type="range" id="contrast" min="-100" max="100" value="0" oninput="adjustContrast(this.value)">
+                        </div>
+                        <div class="control-group">
+                            <label>Doygunluk: <span id="saturationValue">0</span></label>
+                            <input type="range" id="saturation" min="-100" max="100" value="0" oninput="adjustSaturation(this.value)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History -->
+                <div class="panel-section">
+                    <div class="panel-header" onclick="togglePanel(this)">
+                        Geçmiş
+                    </div>
+                    <div class="panel-content">
+                        <div class="history-list" id="historyList">
+                            <div class="history-item current">Yeni Belge</div>
+                        </div>
+                        <button class="filter-btn" style="width: 100%; margin-top: 8px;" onclick="clearHistory()">Geçmişi Temizle</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span id="statusText">Hazır</span>
+            <span id="canvasInfo">800 x 600 px</span>
+        </div>
+    </div>
+
+    <script>
+        // Global Variables
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+        let currentTool = 'brush';
+        let isDrawing = false;
+        let startX, startY;
+        let currentLayer = 0;
+        let layers = [canvas];
+        let history = [];
+        let historyStep = 0;
+        let brushSize = 20;
+        let brushColor = '#000000';
+        let brushOpacity = 1;
+        let brushHardness = 0.5;
+
+        // Initialize
+        init();
+
+        function init() {
+            canvas.style.cursor = 'crosshair';
+            saveState();
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+            
+            // Touch events for mobile
+            canvas.addEventListener('touchstart', handleTouch);
+            canvas.addEventListener('touchmove', handleTouch);
+            canvas.addEventListener('touchend', stopDrawing);
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', handleKeyboard);
+        }
+
+        // Tool Selection
+        function selectTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update cursor
+            switch(tool) {
+                case 'brush': canvas.style.cursor = 'crosshair'; break;
+                case 'eraser': canvas.style.cursor = 'grab'; break;
+                case 'eyedropper': canvas.style.cursor = 'copy'; break;
+                case 'text': canvas.style.cursor = 'text'; break;
+                case 'move': canvas.style.cursor = 'move'; break;
+                default: canvas.style.cursor = 'crosshair';
+            }
+            
+            updateStatus(`${tool.charAt(0).toUpperCase() + tool.slice(1)} aracı seçildi`);
+        }
+
+        // Drawing Functions
+        function startDrawing(e) {
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            startX = e.clientX - rect.left;
+            startY = e.clientY - rect.top;
+            
+            if (currentTool === 'eyedropper') {
+                pickColor(startX, startY);
+                return;
+            }
+            
+            if (currentTool === 'brush' || currentTool === 'eraser') {
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+            }
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const currentX = e.clientX - rect.left;
+            const currentY = e.clientY - rect.top;
+            
+            ctx.lineWidth = brushSize;
+            ctx.lineCap = 'round';
+            ctx.globalAlpha = brushOpacity;
+            
+            switch(currentTool) {
+                case 'brush':
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.strokeStyle = brushColor;
+                    ctx.lineTo(currentX, currentY);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(currentX, currentY);
+                    break;
+                    
+                case 'eraser':
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.lineTo(currentX, currentY);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(currentX, currentY);
+                    break;
+                    
+                case 'blur':
+                    applyBlurEffect(currentX, currentY);
+                    break;
+                    
+                case 'sharpen':
+                    applySharpenEffect(currentX, currentY);
+                    break;
+            }
+        }
+
+        function stopDrawing() {
+            if (isDrawing) {
+                isDrawing = false;
+                ctx.beginPath();
+                saveState();
+            }
+        }
+
+        // Touch Support
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 
+                                            e.type === 'touchmove' ? 'mousemove' : 'mouseup', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
+        }
+
+        // Keyboard Shortcuts
+        function handleKeyboard(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'z': e.preventDefault(); undo(); break;
+                    case 'y': e.preventDefault(); redo(); break;
+                    case 's': e.preventDefault(); saveImage(); break;
+                    case 'o': e.preventDefault(); document.getElementById('fileInput').click(); break;
+                    case 'n': e.preventDefault(); newImage(); break;
+                }
+            }
+            
+            // Tool shortcuts
+            switch(e.key) {
+                case 'b': selectBrushTool(); break;
+                case 'e': selectEraserTool(); break;
+                case 'i': selectEyedropperTool(); break;
+                case 't': selectTextTool(); break;
+                case 'v': selectMoveTool(); break;
+            }
+        }
+
+        // Brush Settings
+        function updateBrushSize(value) {
+            brushSize = value;
+            document.getElementById('brushSizeValue').textContent = value;
+        }
+
+        function updateOpacity(value) {
+            brushOpacity = value / 100;
+            document.getElementById('opacityValue').textContent = value;
+        }
+
+        function updateBrushColor(value) {
+            brushColor = value;
+        }
+
+        function updateHardness(value) {
+            brushHardness = value / 100;
+            document.getElementById('hardnessValue').textContent = value;
+        }
+
+        // Color Picker
+        function pickColor(x, y) {
+            const imageData = ctx.getImageData(x, y, 1, 1);
+            const pixel = imageData.data;
+            const color = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+            const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+            document.getElementById('brushColor').value = hex;
+            brushColor = hex;
+            updateStatus(`Renk seçildi: ${hex}`);
+        }
+
+        function rgbToHex(r, g, b) {
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
+
+        // Image Operations
+        function loadImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                        updateCanvasInfo();
+                        saveState();
+                        updateStatus('Görüntü yüklendi');
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function saveImage() {
+            const link = document.createElement('a');
+            link.download = 'web-photoshop-image.png';
+            link.href = canvas.toDataURL();
+            link.click();
+            updateStatus('Görüntü kaydedildi');
+        }
+
+        function newImage() {
+            const width = prompt('Genişlik (px):', '800');
+            const height = prompt('Yükseklik (px):', '600');
+            
+            if (width && height) {
+                canvas.width = parseInt(width);
+                canvas.height = parseInt(height);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                updateCanvasInfo();
+                clearHistory();
+                saveState();
+                updateStatus('Yeni belge oluşturuldu');
+            }
+        }
+
+        // Filters
+        function applyFilter(filterType) {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            switch(filterType) {
+                case 'grayscale':
+                    for (let i = 0; i < data.length; i += 4) {
+                        const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+                        data[i] = data[i + 1] = data[i + 2] = gray;
+                    }
+                    break;
+                    
+                case 'invert':
+                    for (let i = 0; i < data.length; i += 4) {
+                        data[i] = 255 - data[i];
+                        data[i + 1] = 255 - data[i + 1];
+                        data[i + 2] = 255 - data[i + 2];
+                    }
+                    break;
+                    
+                case 'sepia':
+                    for (let i = 0; i < data.length; i += 4) {
+                        const r = data[i];
+                        const g = data[i + 1];
+                        const b = data[i + 2];
+                        data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
+                        data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
+                        data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
+                    }
+                    break;
+                    
+                case 'blur':
+                    applyConvolutionFilter(data, canvas.width, canvas.height, [
+                        1/9, 1/9, 1/9,
+                        1/9, 1/9, 1/9,
+                        1/9, 1/9, 1/9
+                    ]);
+                    break;
+                    
+                case 'sharpen':
+                    applyConvolutionFilter(data, canvas.width, canvas.height, [
+                        0, -1, 0,
+                        -1, 5, -1,
+                        0, -1, 0
+                    ]);
+                    break;
+                    
+                case 'emboss':
+                    applyConvolutionFilter(data, canvas.width, canvas.height, [
+                        -2, -1, 0,
+                        -1, 1, 1,
+                        0, 1, 2
+                    ]);
+                    break;
+                    
+                case 'edge':
+                    applyConvolutionFilter(data, canvas.width, canvas.height, [
+                        -1, -1, -1,
+                        -1, 8, -1,
+                        -1, -1, -1
+                    ]);
+                    break;
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+            saveState();
+            updateStatus(`${filterType} filtresi uygulandı`);
+        }
+
+        function applyConvolutionFilter(data, width, height, kernel) {
+            const output = new Uint8ClampedArray(data);
+            const kSize = 3;
+            const kHalf = Math.floor(kSize / 2);
+            
+            for (let y = kHalf; y < height - kHalf; y++) {
+                for (let x = kHalf; x < width - kHalf; x++) {
+                    let r = 0, g = 0, b = 0;
+                    
+                    for (let ky = 0; ky < kSize; ky++) {
+                        for (let kx = 0; kx < kSize; kx++) {
+                            const pixelIndex = ((y + ky - kHalf) * width + (x + kx - kHalf)) * 4;
+                            const kernelValue = kernel[ky * kSize + kx];
+                            
+                            r += data[pixelIndex] * kernelValue;
+                            g += data[pixelIndex + 1] * kernelValue;
+                            b += data[pixelIndex + 2] * kernelValue;
+                        }
+                    }
+                    
+                    const outputIndex = (y * width + x) * 4;
+                    output[outputIndex] = Math.max(0, Math.min(255, r));
+                    output[outputIndex + 1] = Math.max(0, Math.min(255, g));
+                    output[outputIndex + 2] = Math.max(0, Math.min(255, b));
+                }
+            }
+            
+            for (let i = 0; i < data.length; i++) {
+                data[i] = output[i];
+            }
+        }
+
+        // Brightness/Contrast/Saturation
+        function adjustBrightness(value) {
+            document.getElementById('brightnessValue').textContent = value;
+            applyImageAdjustment('brightness', value);
+        }
+
+        function adjustContrast(value) {
+            document.getElementById('contrastValue').textContent = value;
+            applyImageAdjustment('contrast', value);
+        }
+
+        function adjustSaturation(value) {
+            document.getElementById('saturationValue').textContent = value;
+            applyImageAdjustment('saturation', value);
+        }
+
+        function applyImageAdjustment(type, value) {
+            // Apply adjustment in real-time
+            const filter = getFilterString();
+            canvas.style.filter = filter;
+        }
+
+        function getFilterString() {
+            const brightness = document.getElementById('brightness').value;
+            const contrast = document.getElementById('contrast').value;
+            const saturation = document.getElementById('saturation').value;
+            
+            return `brightness(${100 + parseInt(brightness)}%) contrast(${100 + parseInt(contrast)}%) saturate(${100 + parseInt(saturation)}%)`;
+        }
+
+        // History Management
+        function saveState() {
+            historyStep++;
+            if (historyStep < history.length) {
+                history.length = historyStep;
+            }
+            history.push(canvas.toDataURL());
+            updateHistoryPanel();
+        }
+
+        function undo() {
+            if (historyStep > 0) {
+                historyStep--;
+                restoreState();
+                updateStatus('Geri alındı');
+            }
+        }
+
+        function redo() {
+            if (historyStep < history.length - 1) {
+                historyStep++;
+                restoreState();
+                updateStatus('Yinelendi');
+            }
+        }
+
+        function restoreState() {
+            const img = new Image();
+            img.onload = function() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+                updateHistoryPanel();
+            };
+            img.src = history[historyStep];
+        }
+
+        function clearHistory() {
+            history = [];
+            historyStep = 0;
+            saveState();
+            updateHistoryPanel();
+        }
+
+        function updateHistoryPanel() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            
+            history.forEach((state, index) => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                if (index === historyStep) item.classList.add('current');
+                item.textContent = `Adım ${index + 1}`;
+                item.onclick = () => restoreToStep(index);
+                historyList.appendChild(item);
+            });
+        }
+
+        function restoreToStep(step) {
+            historyStep = step;
+            restoreState();
+            updateStatus(`Adım ${step + 1}'e geri dönüldü`);
+        }
+
+        // Layer Management
+        function addLayer() {
+            const layerName = prompt('Katman adı:', `Katman ${layers.length + 1}`);
+            if (layerName) {
+                const newCanvas = document.createElement('canvas');
+                newCanvas.width = canvas.width;
+                newCanvas.height = canvas.height;
+                layers.push(newCanvas);
+                
+                const layersList = document.getElementById('layersList');
+                const layerItem = document.createElement('div');
+                layerItem.className = 'layer-item';
+                layerItem.dataset.layer = layers.length - 1;
+                layerItem.innerHTML = `
+                    <span>${layerName}</span>
+                    <div class="layer-controls">
+                        <button class="layer-btn" onclick="toggleLayerVisibility(${layers.length - 1})">👁️</button>
+                        <button class="layer-btn" onclick="deleteLayer(${layers.length - 1})">🗑️</button>
+                    </div>
+                `;
+                layerItem.onclick = () => selectLayer(layers.length - 1);
+                layersList.insertBefore(layerItem, layersList.firstChild);
+                
+                selectLayer(layers.length - 1);
+                updateStatus(`Yeni katman eklendi: ${layerName}`);
+            }
+        }
+
+        function selectLayer(layerIndex) {
+            currentLayer = layerIndex;
+            document.querySelectorAll('.layer-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`[data-layer="${layerIndex}"]`).classList.add('active');
+            updateStatus(`Katman ${layerIndex + 1} seçildi`);
+        }
+
+        function toggleLayerVisibility(layerIndex) {
+            // Toggle layer visibility logic would go here
+            updateStatus(`Katman ${layerIndex + 1} görünürlüğü değiştirildi`);
+        }
+
+        function deleteLayer(layerIndex) {
+            if (layers.length > 1) {
+                layers.splice(layerIndex, 1);
+                document.querySelector(`[data-layer="${layerIndex}"]`).remove();
+                if (currentLayer >= layerIndex && currentLayer > 0) {
+                    currentLayer--;
+                }
+                updateStatus(`Katman ${layerIndex + 1} silindi`);
+            }
+        }
+
+        // Advanced Drawing Effects
+        function applyBlurEffect(x, y) {
+            const imageData = ctx.getImageData(x - brushSize/2, y - brushSize/2, brushSize, brushSize);
+            const data = imageData.data;
+            
+            // Simple blur effect
+            for (let i = 0; i < data.length; i += 4) {
+                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                data[i] = data[i + 1] = data[i + 2] = avg;
+            }
+            
+            ctx.putImageData(imageData, x - brushSize/2, y - brushSize/2);
+        }
+
+        function applySharpenEffect(x, y) {
+            const imageData = ctx.getImageData(x - brushSize/2, y - brushSize/2, brushSize, brushSize);
+            const data = imageData.data;
+            
+            // Simple sharpen effect
+            for (let i = 0; i < data.length; i += 4) {
+                data[i] = Math.min(255, data[i] * 1.2);
+                data[i + 1] = Math.min(255, data[i + 1] * 1.2);
+                data[i + 2] = Math.min(255, data[i + 2] * 1.2);
+            }
+            
+            ctx.putImageData(imageData, x - brushSize/2, y - brushSize/2);
+        }
+
+        // Shape Drawing
+        function drawRectangle(startX, startY, endX, endY) {
+            ctx.strokeStyle = brushColor;
+            ctx.lineWidth = brushSize;
+            ctx.strokeRect(startX, startY, endX - startX, endY - startY);
+        }
+
+        function drawCircle(startX, startY, endX, endY) {
+            const radius = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+            ctx.beginPath();
+            ctx.arc(startX, startY, radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = brushColor;
+            ctx.lineWidth = brushSize;
+            ctx.stroke();
+        }
+
+        function drawLine(startX, startY, endX, endY) {
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = brushColor;
+            ctx.lineWidth = brushSize;
+            ctx.stroke();
+        }
+
+        // Text Tool
+        function addText(x, y) {
+            const text = prompt('Metin girin:');
+            if (text) {
+                const fontSize = prompt('Font boyutu (px):', '24');
+                ctx.font = `${fontSize}px Arial`;
+                ctx.fillStyle = brushColor;
+                ctx.fillText(text, x, y);
+                saveState();
+                updateStatus('Metin eklendi');
+            }
+        }
+
+        // Crop Tool
+        let cropStartX, cropStartY, cropEndX, cropEndY;
+        let isCropping = false;
+
+        function startCrop(x, y) {
+            isCropping = true;
+            cropStartX = x;
+            cropStartY = y;
+        }
+
+        function updateCrop(x, y) {
+            if (!isCropping) return;
+            cropEndX = x;
+            cropEndY = y;
+            
+            // Draw crop selection
+            ctx.save();
+            ctx.strokeStyle = '#000';
+            ctx.setLineDash([5, 5]);
+            ctx.strokeRect(cropStartX, cropStartY, cropEndX - cropStartX, cropEndY - cropStartY);
+            ctx.restore();
+        }
+
+        function applyCrop() {
+            if (isCropping) {
+                const width = Math.abs(cropEndX - cropStartX);
+                const height = Math.abs(cropEndY - cropStartY);
+                const x = Math.min(cropStartX, cropEndX);
+                const y = Math.min(cropStartY, cropEndY);
+                
+                const imageData = ctx.getImageData(x, y, width, height);
+                canvas.width = width;
+                canvas.height = height;
+                ctx.putImageData(imageData, 0, 0);
+                
+                isCropping = false;
+                updateCanvasInfo();
+                saveState();
+                updateStatus('Görüntü kırpıldı');
+            }
+        }
+
+        // Clone Tool
+        let cloneSource = null;
+
+        function setCloneSource(x, y) {
+            cloneSource = { x: x, y: y };
+            updateStatus('Kopyalama kaynağı ayarlandı');
+        }
+
+        function clonePaint(x, y) {
+            if (cloneSource) {
+                const imageData = ctx.getImageData(cloneSource.x - brushSize/2, cloneSource.y - brushSize/2, brushSize, brushSize);
+                ctx.putImageData(imageData, x - brushSize/2, y - brushSize/2);
+            }
+        }
+
+        // Menu Functions
+        function newImage() {
+            const width = prompt('Genişlik (px):', '800');
+            const height = prompt('Yükseklik (px):', '600');
+            
+            if (width && height) {
+                canvas.width = parseInt(width);
+                canvas.height = parseInt(height);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                updateCanvasInfo();
+                clearHistory();
+                saveState();
+                updateStatus('Yeni belge oluşturuldu');
+            }
+        }
+
+        function editMenu() {
+            const action = prompt('Düzenle:\n1. Geri Al (Ctrl+Z)\n2. Yinele (Ctrl+Y)\n3. Tümünü Seç\n4. Kopyala\n5. Yapıştır\nSeçiminizi yapın (1-5):');
+            
+            switch(action) {
+                case '1': undo(); break;
+                case '2': redo(); break;
+                case '3': selectAll(); break;
+                case '4': copySelection(); break;
+                case '5': pasteSelection(); break;
+            }
+        }
+
+        function imageMenu() {
+            const action = prompt('Görüntü:\n1. Boyut Değiştir\n2. Döndür\n3. Çevir\n4. Renk Ayarları\nSeçiminizi yapın (1-4):');
+            
+            switch(action) {
+                case '1': resizeImage(); break;
+                case '2': rotateImage(); break;
+                case '3': flipImage(); break;
+                case '4': colorAdjustments(); break;
+            }
+        }
+
+        function layerMenu() {
+            const action = prompt('Katman:\n1. Yeni Katman\n2. Katman Sil\n3. Katman Birleştir\n4. Katman Düzenle\nSeçiminizi yapın (1-4):');
+            
+            switch(action) {
+                case '1': addLayer(); break;
+                case '2': deleteLayer(currentLayer); break;
+                case '3': mergeLayers(); break;
+                case '4': editLayer(); break;
+            }
+        }
+
+        function filterMenu() {
+            const action = prompt('Filtre:\n1. Bulanıklaştır\n2. Keskinleştir\n3. Gürültü\n4. Sanatsal\n5. Bozulma\nSeçiminizi yapın (1-5):');
+            
+            switch(action) {
+                case '1': applyFilter('blur'); break;
+                case '2': applyFilter('sharpen'); break;
+                case '3': applyNoiseFilter(); break;
+                case '4': applyArtisticFilter(); break;
+                case '5': applyDistortionFilter(); break;
+            }
+        }
+
+        function viewMenu() {
+            const action = prompt('Görünüm:\n1. Yakınlaştır\n2. Uzaklaştır\n3. Sığdır\n4. Gerçek Boyut\nSeçiminizi yapın (1-4):');
+            
+            switch(action) {
+                case '1': zoomIn(); break;
+                case '2': zoomOut(); break;
+                case '3': fitToScreen(); break;
+                case '4': actualSize(); break;
+            }
+        }
+
+        // Additional Image Operations
+        function resizeImage() {
+            const newWidth = prompt('Yeni genişlik:', canvas.width);
+            const newHeight = prompt('Yeni yükseklik:', canvas.height);
+            
+            if (newWidth && newHeight) {
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                canvas.width = parseInt(newWidth);
+                canvas.height = parseInt(newHeight);
+                
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.width = parseInt(newWidth);
+                tempCanvas.height = parseInt(newHeight);
+                
+                tempCtx.putImageData(imageData, 0, 0);
+                ctx.drawImage(tempCanvas, 0, 0, canvas.width, canvas.height);
+                
+                updateCanvasInfo();
+                saveState();
+                updateStatus('Görüntü boyutu değiştirildi');
+            }
+        }
+
+        function rotateImage() {
+            const angle = prompt('Döndürme açısı (derece):', '90');
+            if (angle) {
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                tempCtx.putImageData(imageData, 0, 0);
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.translate(canvas.width/2, canvas.height/2);
+                ctx.rotate(parseInt(angle) * Math.PI / 180);
+                ctx.drawImage(tempCanvas, -canvas.width/2, -canvas.height/2);
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                
+                saveState();
+                updateStatus(`Görüntü ${angle}° döndürüldü`);
+            }
+        }
+
+        function flipImage() {
+            const direction = prompt('Çevirme yönü:\n1. Yatay\n2. Dikey\nSeçiminizi yapın (1-2):');
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            tempCtx.putImageData(imageData, 0, 0);
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (direction === '1') {
+                ctx.scale(-1, 1);
+                ctx.drawImage(tempCanvas, -canvas.width, 0);
+            } else if (direction === '2') {
+                ctx.scale(1, -1);
+                ctx.drawImage(tempCanvas, 0, -canvas.height);
+            }
+            
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            saveState();
+            updateStatus('Görüntü çevrildi');
+        }
+
+        // Utility Functions
+        function updateCanvasInfo() {
+            document.getElementById('canvasInfo').textContent = `${canvas.width} x ${canvas.height} px`;
+        }
+
+        function updateStatus(message) {
+            document.getElementById('statusText').textContent = message;
+            setTimeout(() => {
+                document.getElementById('statusText').textContent = 'Hazır';
+            }, 3000);
+        }
+
+        function togglePanel(header) {
+            const section = header.parentElement;
+            section.classList.toggle('expanded');
+        }
+
+        // Tool Selection Shortcuts
+        function selectBrushTool() {
+            document.querySelector('[onclick="selectTool(\'brush\')"]').click();
+        }
+
+        function selectEraserTool() {
+            document.querySelector('[onclick="selectTool(\'eraser\')"]').click();
+        }
+
+        function selectEyedropperTool() {
+            document.querySelector('[onclick="selectTool(\'eyedropper\')"]').click();
+        }
+
+        function selectTextTool() {
+            document.querySelector('[onclick="selectTool(\'text\')"]').click();
+        }
+
+        function selectMoveTool() {
+            document.querySelector('[onclick="selectTool(\'move\')"]').click();
+        }
+
+        // Advanced Filters
+        function applyNoiseFilter() {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                const noise = (Math.random() - 0.5) * 50;
+                data[i] = Math.max(0, Math.min(255, data[i] + noise));
+                data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
+                data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+            saveState();
+            updateStatus('Gürültü filtresi uygulandı');
+        }
+
+        function applyArtisticFilter() {
+            const filterType = prompt('Sanatsal Filtre:\n1. Yağlı Boya\n2. Karakalem\n3. Posterize\nSeçiminizi yapın (1-3):');
+            
+            switch(filterType) {
+                case '1': applyOilPaintingFilter(); break;
+                case '2': applyPencilSketchFilter(); break;
+                case '3': applyPosterizeFilter(); break;
+            }
+        }
+
+        function applyOilPaintingFilter() {
+            applyFilter('blur');
+            updateStatus('Yağlı boya filtresi uygulandı');
+        }
+
+        function applyPencilSketchFilter() {
+            applyFilter('grayscale');
+            applyFilter('edge');
+            updateStatus('Karakalem filtresi uygulandı');
+        }
+
+        function applyPosterizeFilter() {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            const levels = 8;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                data[i] = Math.floor(data[i] / (256 / levels)) * (256 / levels);
+                data[i + 1] = Math.floor(data[i + 1] / (256 / levels)) * (256 / levels);
+                data[i + 2] = Math.floor(data[i + 2] / (256 / levels)) * (256 / levels);
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+            saveState();
+            updateStatus('Posterize filtresi uygulandı');
+        }
+
+        // Zoom Functions
+        let zoomLevel = 1;
+
+        function zoomIn() {
+            zoomLevel *= 1.2;
+            canvas.style.transform = `scale(${zoomLevel})`;
+            updateStatus(`Yakınlaştırma: %${Math.round(zoomLevel * 100)}`);
+        }
+
+        function zoomOut() {
+            zoomLevel /= 1.2;
+            canvas.style.transform = `scale(${zoomLevel})`;
+            updateStatus(`Yakınlaştırma: %${Math.round(zoomLevel * 100)}`);
+        }
+
+        function fitToScreen() {
+            zoomLevel = 1;
+            canvas.style.transform = 'scale(1)';
+            updateStatus('Ekrana sığdırıldı');
+        }
+
+        function actualSize() {
+            zoomLevel = 1;
+            canvas.style.transform = 'scale(1)';
+            updateStatus('Gerçek boyut');
+        }
+
+        // Initialize the application
+        window.onload = function() {
+            updateCanvasInfo();
+            updateStatus('Web Photoshop hazır - Fırça aracı seçili');
+            
+            // Set initial white background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            saveState();
+        };
+
+        // Handle window resize
+        window.onresize = function() {
+            // Responsive adjustments could go here
+        };
+    </script>
+</body>
+</html>
